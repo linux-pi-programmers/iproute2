@@ -919,6 +919,29 @@ struct tc_pie_xstats {
 	__u32 ecn_mark;         /* packets marked with ecn*/
 };
 
+/* PI */
+enum {
+	TCA_PI_UNSPEC,
+	TCA_PI_TARGET,
+	TCA_PI_LIMIT,
+	TCA_PI_TUPDATE,
+	TCA_PI_ALPHA,
+	TCA_PI_BETA,
+	TCA_PI_ECN,
+	TCA_PI_BYTEMODE,
+	__TCA_PI_MAX
+};
+#define TCA_PI_MAX   (__TCA_PI_MAX - 1)
+
+struct tc_pi_xstats {
+	__u32 prob;             /* current probability */
+	__u32 packets_in;       /* total number of packets enqueued */
+	__u32 dropped;          /* packets dropped due to pie_action */
+	__u32 overlimit;        /* dropped due to lack of space in queue */
+	__u32 maxq;             /* maximum queue size */
+	__u32 ecn_mark;         /* packets marked with ecn*/
+};
+
 /* CBS */
 struct tc_cbs_qopt {
 	__u8 offload;
