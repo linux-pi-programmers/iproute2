@@ -325,6 +325,12 @@ _tc_qdisc_options()
             _tc_one_of_list 'ecn noecn'
             return 0
             ;;
+        pi)
+            _tc_once_attr 'limit target tupdate alpha beta'
+            _tc_one_of_list 'bytemode nobytemode'
+            _tc_one_of_list 'ecn noecn'
+            return 0
+            ;;
         red)
             _tc_once_attr 'limit min max avpkt burst adaptive probability \
                 bandwidth ecn harddrop'
