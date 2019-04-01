@@ -30,7 +30,7 @@
 
 static void explain(void)
 {
-	fprintf(stderr, "Usage: ... pi [ limit PACKETS ][ target LENGTH bytes]\n");
+	fprintf(stderr, "Usage: ... pi [ limit PACKETS ][ target LENGTH PACKETS]\n");
 	fprintf(stderr, "              [ tupdate TIME us][ alpha ALPHA ]");
 	fprintf(stderr, "[beta BETA ][bytemode | nobytemode][ecn | noecn ]\n");
 }
@@ -46,6 +46,7 @@ static int pi_parse_opt(struct qdisc_util *qu, int argc, char **argv,
 	unsigned int tupdate = 0;
 	unsigned int alpha   = 0;
 	unsigned int beta    = 0;
+	double tmp;
 	int ecn = -1;
 	int bytemode = -1;
 	struct rtattr *tail;
@@ -59,7 +60,7 @@ static int pi_parse_opt(struct qdisc_util *qu, int argc, char **argv,
 			}
 		} else if (strcmp(*argv, "target") == 0) {
 			NEXT_ARG();
-			if (get_time(&target, *argv)) {
+			if (get_unsigned(&target, *argv, 0)) { // change to get_unsigned
 				fprintf(stderr, "Illegal \"target\"\n");
 				return -1;
 			}
@@ -71,18 +72,20 @@ static int pi_parse_opt(struct qdisc_util *qu, int argc, char **argv,
 			}
 		} else if (strcmp(*argv, "alpha") == 0) {
 			NEXT_ARG();
-			if (get_unsigned(&alpha, *argv, 0) ||
-			    (alpha > ALPHA_MAX)) {
+			if (sscanf(*argv, "%lg", &tmp) != 1 ||
+			    (tmp > ALPHA_MAX)) {
 				fprintf(stderr, "Illegal \"alpha\"\n");
 				return -1;
 			}
+			alpha = (unsigned int) tmp * 100000000;
 		} else if (strcmp(*argv, "beta") == 0) {
 			NEXT_ARG();
-			if (get_unsigned(&beta, *argv, 0) ||
-			    (beta > BETA_MAX)) {
+			if (sscanf(*argv, "%lg", &tmp) != 1 ||
+			    (tmp > BETA_MAX)) {
 				fprintf(stderr, "Illegal \"beta\"\n");
 				return -1;
 			}
+			beta = (unsigned int) tmp * 100000000;
 		} else if (strcmp(*argv, "ecn") == 0) {
 			ecn = 1;
 		} else if (strcmp(*argv, "noecn") == 0) {
@@ -110,9 +113,9 @@ static int pi_parse_opt(struct qdisc_util *qu, int argc, char **argv,
 		addattr_l(n, 1024, TCA_PI_TUPDATE, &tupdate, sizeof(tupdate));
 	if (target)
 		addattr_l(n, 1024, TCA_PI_TARGET, &target, sizeof(target));
-	if (alpha)
+	if (alpha) // Need to add scaling here 
 		addattr_l(n, 1024, TCA_PI_ALPHA, &alpha, sizeof(alpha));
-	if (beta)
+	if (beta) // Need to add scaling here 
 		addattr_l(n, 1024, TCA_PI_BETA, &beta, sizeof(beta));
 	if (ecn != -1)
 		addattr_l(n, 1024, TCA_PI_ECN, &ecn, sizeof(ecn));
