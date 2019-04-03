@@ -30,22 +30,22 @@
 
 static void explain(void)
 {
-	fprintf(stderr, "Usage: ... pi [ limit PACKETS ][ target LENGTH PACKETS]\n");
-	fprintf(stderr, "              [ tupdate TIME us][ alpha ALPHA ]");
-	fprintf(stderr, "[beta BETA ][bytemode | nobytemode][ecn | noecn ]\n");
+	fprintf(stderr, "Usage: ... pi [ limit PACKETS ][ qref LENGTH PACKETS]\n");
+	fprintf(stderr, "              [ w TIME us][ a A ]");
+	fprintf(stderr, "[b B ][bytemode | nobytemode][ecn | noecn ]\n");
 }
 
-#define ALPHA_MAX 32
-#define BETA_MAX 32
+#define A_MAX 1
+#define B_MAX 1
 
 static int pi_parse_opt(struct qdisc_util *qu, int argc, char **argv,
 			 struct nlmsghdr *n, const char *dev)
 {
 	unsigned int limit   = 0;
-	unsigned int target  = 0;
-	unsigned int tupdate = 0;
-	unsigned int alpha   = 0;
-	unsigned int beta    = 0;
+	unsigned int qref  = 0;
+	unsigned int w = 0;
+	unsigned int a = 0;
+	unsigned int b = 0;
 	double tmp;
 	int ecn = -1;
 	int bytemode = -1;
@@ -58,34 +58,34 @@ static int pi_parse_opt(struct qdisc_util *qu, int argc, char **argv,
 				fprintf(stderr, "Illegal \"limit\"\n");
 				return -1;
 			}
-		} else if (strcmp(*argv, "target") == 0) {
+		} else if (strcmp(*argv, "qref") == 0) {
 			NEXT_ARG();
-			if (get_unsigned(&target, *argv, 0)) { // change to get_unsigned
-				fprintf(stderr, "Illegal \"target\"\n");
+			if (get_unsigned(&qref, *argv, 0)) { // change to get_unsigned
+				fprintf(stderr, "Illegal \"qref\"\n");
 				return -1;
 			}
-		} else if (strcmp(*argv, "tupdate") == 0) {
+		} else if (strcmp(*argv, "w") == 0) {
 			NEXT_ARG();
-			if (get_time(&tupdate, *argv)) {
-				fprintf(stderr, "Illegal \"tupdate\"\n");
+			if (get_time(&w, *argv)) {
+				fprintf(stderr, "Illegal \"w\"\n");
 				return -1;
 			}
-		} else if (strcmp(*argv, "alpha") == 0) {
-			NEXT_ARG();
-			if (sscanf(*argv, "%lg", &tmp) != 1 ||
-			    (tmp > ALPHA_MAX)) {
-				fprintf(stderr, "Illegal \"alpha\"\n");
-				return -1;
-			}
-			alpha = (unsigned int) tmp * 100000000;
-		} else if (strcmp(*argv, "beta") == 0) {
+		} else if (strcmp(*argv, "a") == 0) {
 			NEXT_ARG();
 			if (sscanf(*argv, "%lg", &tmp) != 1 ||
-			    (tmp > BETA_MAX)) {
-				fprintf(stderr, "Illegal \"beta\"\n");
+			    (tmp > A_MAX)) {
+				fprintf(stderr, "Illegal \"a\"\n");
 				return -1;
 			}
-			beta = (unsigned int) tmp * 100000000;
+			a = (unsigned int) tmp * 100000000;
+		} else if (strcmp(*argv, "b") == 0) {
+			NEXT_ARG();
+			if (sscanf(*argv, "%lg", &tmp) != 1 ||
+			    (tmp > B_MAX)) {
+				fprintf(stderr, "Illegal \"b\"\n");
+				return -1;
+			}
+			b = (unsigned int) tmp * 100000000;
 		} else if (strcmp(*argv, "ecn") == 0) {
 			ecn = 1;
 		} else if (strcmp(*argv, "noecn") == 0) {
@@ -109,14 +109,14 @@ static int pi_parse_opt(struct qdisc_util *qu, int argc, char **argv,
 	tail = addattr_nest(n, 1024, TCA_OPTIONS);
 	if (limit)
 		addattr_l(n, 1024, TCA_PI_LIMIT, &limit, sizeof(limit));
-	if (tupdate)
-		addattr_l(n, 1024, TCA_PI_TUPDATE, &tupdate, sizeof(tupdate));
-	if (target)
-		addattr_l(n, 1024, TCA_PI_TARGET, &target, sizeof(target));
-	if (alpha) // Need to add scaling here 
-		addattr_l(n, 1024, TCA_PI_ALPHA, &alpha, sizeof(alpha));
-	if (beta) // Need to add scaling here 
-		addattr_l(n, 1024, TCA_PI_BETA, &beta, sizeof(beta));
+	if (w)
+		addattr_l(n, 1024, TCA_PI_W, &w, sizeof(w));
+	if (qref)
+		addattr_l(n, 1024, TCA_PI_QREF, &qref, sizeof(qref));
+	if (a) // Need to add scaling here 
+		addattr_l(n, 1024, TCA_PI_A, &a, sizeof(a));
+	if (b) // Need to add scaling here 
+		addattr_l(n, 1024, TCA_PI_B, &b, sizeof(b));
 	if (ecn != -1)
 		addattr_l(n, 1024, TCA_PI_ECN, &ecn, sizeof(ecn));
 	if (bytemode != -1)
@@ -131,10 +131,10 @@ static int pi_print_opt(struct qdisc_util *qu, FILE *f, struct rtattr *opt)
 {
 	struct rtattr *tb[TCA_PI_MAX + 1];
 	unsigned int limit;
-	unsigned int tupdate;
-	unsigned int target;
-	unsigned int alpha;
-	unsigned int beta;
+	unsigned int w;
+	unsigned int qref;
+	unsigned int a;
+	unsigned int b;
 	unsigned int ecn;
 	unsigned int bytemode;
 
@@ -150,25 +150,25 @@ static int pi_print_opt(struct qdisc_util *qu, FILE *f, struct rtattr *opt)
 		limit = rta_getattr_u32(tb[TCA_PI_LIMIT]);
 		fprintf(f, "limit %up ", limit);
 	}
-	if (tb[TCA_PI_TARGET] &&
-	    RTA_PAYLOAD(tb[TCA_PI_TARGET]) >= sizeof(__u32)) {
-		target = rta_getattr_u32(tb[TCA_PI_TARGET]);
-		fprintf(f, "target %s ", sprint_time(target, b1));
+	if (tb[TCA_PI_QREF] &&
+	    RTA_PAYLOAD(tb[TCA_PI_QREF]) >= sizeof(__u32)) {
+		qref = rta_getattr_u32(tb[TCA_PI_QREF]);
+		fprintf(f, "qref %s ", sprint_time(qref, b1));
 	}
-	if (tb[TCA_PI_TUPDATE] &&
-	    RTA_PAYLOAD(tb[TCA_PI_TUPDATE]) >= sizeof(__u32)) {
-		tupdate = rta_getattr_u32(tb[TCA_PI_TUPDATE]);
-		fprintf(f, "tupdate %s ", sprint_time(tupdate, b1));
+	if (tb[TCA_PI_W] &&
+	    RTA_PAYLOAD(tb[TCA_PI_W]) >= sizeof(__u32)) {
+		w = rta_getattr_u32(tb[TCA_PI_W]);
+		fprintf(f, "w %s ", sprint_time(w, b1));
 	}
-	if (tb[TCA_PI_ALPHA] &&
-	    RTA_PAYLOAD(tb[TCA_PI_ALPHA]) >= sizeof(__u32)) {
-		alpha = rta_getattr_u32(tb[TCA_PI_ALPHA]);
-		fprintf(f, "alpha %u ", alpha);
+	if (tb[TCA_PI_A] &&
+	    RTA_PAYLOAD(tb[TCA_PI_A]) >= sizeof(__u32)) {
+		a = rta_getattr_u32(tb[TCA_PI_A]);
+		fprintf(f, "a %u ", a);
 	}
-	if (tb[TCA_PI_BETA] &&
-	    RTA_PAYLOAD(tb[TCA_PI_BETA]) >= sizeof(__u32)) {
-		beta = rta_getattr_u32(tb[TCA_PI_BETA]);
-		fprintf(f, "beta %u ", beta);
+	if (tb[TCA_PI_B] &&
+	    RTA_PAYLOAD(tb[TCA_PI_B]) >= sizeof(__u32)) {
+		b = rta_getattr_u32(tb[TCA_PI_B]);
+		fprintf(f, "b %u ", b);
 	}
 
 	if (tb[TCA_PI_ECN] && RTA_PAYLOAD(tb[TCA_PI_ECN]) >= sizeof(__u32)) {
