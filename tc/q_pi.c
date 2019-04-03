@@ -200,8 +200,8 @@ static int pi_print_xstats(struct qdisc_util *qu, FILE *f,
 
 	st = RTA_DATA(xstats);
 	/*prob is returned as a fracion of maximum integer value */
-	fprintf(f, "prob %f\n",
-		(double)st->prob / (double)0xffffffff);
+	fprintf(f, "prob %f qlen %d\n",
+		(double)st->prob / (double)0xffffffff, st->qlen);
 	fprintf(f, "pkts_in %u overlimit %u dropped %u maxq %u ecn_mark %u\n",
 		st->packets_in, st->overlimit, st->dropped, st->maxq,
 		st->ecn_mark);

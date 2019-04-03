@@ -935,8 +935,9 @@ enum {
 
 struct tc_pi_xstats {
 	__u32 prob;             /* current probability */
+	__u32 qlen;
 	__u32 packets_in;       /* total number of packets enqueued */
-	__u32 dropped;          /* packets dropped due to pie_action */
+	__u32 dropped;          /* packets dropped due to pi_action */
 	__u32 overlimit;        /* dropped due to lack of space in queue */
 	__u32 maxq;             /* maximum queue size */
 	__u32 ecn_mark;         /* packets marked with ecn*/
