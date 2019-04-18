@@ -35,7 +35,7 @@ static void explain(void)
 	fprintf(stderr, "[b B ][bytemode | nobytemode][ecn | noecn ]\n");
 }
 
-#define A_MAX 1
+#define A_MAX 10
 #define B_MAX 1
 
 static int pi_parse_opt(struct qdisc_util *qu, int argc, char **argv,
@@ -72,12 +72,11 @@ static int pi_parse_opt(struct qdisc_util *qu, int argc, char **argv,
 			}
 		} else if (strcmp(*argv, "a") == 0) {
 			NEXT_ARG();
-			if (sscanf(*argv, "%lg", &tmp) != 1 ||
-			    (tmp > A_MAX)) {
+			if (get_unsigned(&a, *argv, 0) ||
+			    (a > A_MAX)) {
 				fprintf(stderr, "Illegal \"a\"\n");
 				return -1;
 			}
-			a = (unsigned int) tmp * 100000000;
 		} else if (strcmp(*argv, "b") == 0) {
 			NEXT_ARG();
 			if (sscanf(*argv, "%lg", &tmp) != 1 ||
