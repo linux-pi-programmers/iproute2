@@ -44,9 +44,8 @@ static int pi_parse_opt(struct qdisc_util *qu, int argc, char **argv,
 	unsigned int limit   = 0;
 	unsigned int qref  = 0;
 	unsigned int w = 0;
-	unsigned int a = 0;
-	unsigned int b = 0;
-	double tmp;
+	unsigned long int a = 0;
+	unsigned long int b = 0;
 	int ecn = -1;
 	int bytemode = -1;
 	struct rtattr *tail;
@@ -72,19 +71,18 @@ static int pi_parse_opt(struct qdisc_util *qu, int argc, char **argv,
 			}
 		} else if (strcmp(*argv, "a") == 0) {
 			NEXT_ARG();
-			if (get_unsigned(&a, *argv, 0) ||
+			if (get_u64(&a, *argv, 0) ||
 			    (a > A_MAX)) {
 				fprintf(stderr, "Illegal \"a\"\n");
 				return -1;
 			}
 		} else if (strcmp(*argv, "b") == 0) {
 			NEXT_ARG();
-			if (sscanf(*argv, "%lg", &tmp) != 1 ||
+			if (get_u64(&b, *argv, 0) ||
 			    (tmp > B_MAX)) {
 				fprintf(stderr, "Illegal \"b\"\n");
 				return -1;
 			}
-			b = (unsigned int) tmp * 100000000;
 		} else if (strcmp(*argv, "ecn") == 0) {
 			ecn = 1;
 		} else if (strcmp(*argv, "noecn") == 0) {
@@ -160,13 +158,13 @@ static int pi_print_opt(struct qdisc_util *qu, FILE *f, struct rtattr *opt)
 		fprintf(f, "w %s ", sprint_time(w, b1));
 	}
 	if (tb[TCA_PI_A] &&
-	    RTA_PAYLOAD(tb[TCA_PI_A]) >= sizeof(__u32)) {
-		a = rta_getattr_u32(tb[TCA_PI_A]);
+	    RTA_PAYLOAD(tb[TCA_PI_A]) >= sizeof(__u64)) {
+		a = rta_getattr_u64(tb[TCA_PI_A]);
 		fprintf(f, "a %u ", a);
 	}
 	if (tb[TCA_PI_B] &&
-	    RTA_PAYLOAD(tb[TCA_PI_B]) >= sizeof(__u32)) {
-		b = rta_getattr_u32(tb[TCA_PI_B]);
+	    RTA_PAYLOAD(tb[TCA_PI_B]) >= sizeof(__u64)) {
+		b = rta_getattr_u64(tb[TCA_PI_B]);
 		fprintf(f, "b %u ", b);
 	}
 
