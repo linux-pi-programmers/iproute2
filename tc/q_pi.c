@@ -35,8 +35,8 @@ static void explain(void)
 	fprintf(stderr, "[b B ][bytemode | nobytemode][ecn | noecn ]\n");
 }
 
-#define A_MAX 10
-#define B_MAX 1
+#define A_MAX 0xffffffffffffffff
+#define B_MAX 0xffffffffffffffff
 
 static int pi_parse_opt(struct qdisc_util *qu, int argc, char **argv,
 			 struct nlmsghdr *n, const char *dev)
@@ -79,7 +79,7 @@ static int pi_parse_opt(struct qdisc_util *qu, int argc, char **argv,
 		} else if (strcmp(*argv, "b") == 0) {
 			NEXT_ARG();
 			if (get_u64(&b, *argv, 0) ||
-			    (tmp > B_MAX)) {
+			    (b > B_MAX)) {
 				fprintf(stderr, "Illegal \"b\"\n");
 				return -1;
 			}
