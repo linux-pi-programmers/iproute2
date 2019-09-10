@@ -160,12 +160,12 @@ static int pi_print_opt(struct qdisc_util *qu, FILE *f, struct rtattr *opt)
 	if (tb[TCA_PI_A] &&
 	    RTA_PAYLOAD(tb[TCA_PI_A]) >= sizeof(__u64)) {
 		a = rta_getattr_u64(tb[TCA_PI_A]);
-		fprintf(f, "a %u ", a);
+		fprintf(f, "a %llu ", a);
 	}
 	if (tb[TCA_PI_B] &&
 	    RTA_PAYLOAD(tb[TCA_PI_B]) >= sizeof(__u64)) {
 		b = rta_getattr_u64(tb[TCA_PI_B]);
-		fprintf(f, "b %u ", b);
+		fprintf(f, "b %llu ", b);
 	}
 
 	if (tb[TCA_PI_ECN] && RTA_PAYLOAD(tb[TCA_PI_ECN]) >= sizeof(__u32)) {
